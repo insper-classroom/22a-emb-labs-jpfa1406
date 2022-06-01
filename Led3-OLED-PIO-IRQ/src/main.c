@@ -30,10 +30,8 @@ void pisca_led(int n, int t);
 /* variaveis globais                                                    */
 /************************************************************************/
 
-int freq = 200;
-
 /* flag */
-volatile char but_flag; //
+volatile char but_flag = 0; //
 
 /************************************************************************/
 /* handler / callbacks                                                  */
@@ -43,9 +41,10 @@ void but_callback(void)
 {
 	if (pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)) {
 		// PINO == 1 --> Borda de subida
-		but_flag = 1;
+		but_flag = 0;
 		} else {
 		// PINO == 0 --> Borda de descida
+		but_flag = 1;
 		
 	}
 }
@@ -59,8 +58,14 @@ void pisca_led(int n, int t){
 	for (int i=0;i<n;i++){
 		pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
 		delay_ms(t);
+		if(but_flag == 1){
+			break;
+		}
 		pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 		delay_ms(t);
+		if(but_flag == 1){
+			break;
+		}
 	}
 }
 
@@ -106,6 +111,8 @@ int main (void)
 	sysclk_init();
 	delay_init();
 	
+	int freq = 200;
+	
 	// Desativa watchdog
 	WDT->WDT_MR = WDT_MR_WDDIS;
 
@@ -118,23 +125,23 @@ int main (void)
 	gfx_mono_ssd1306_init();
   
   // Escreve na tela um circulo e um texto
-	gfx_mono_draw_filled_circle(20, 16, 16, GFX_PIXEL_SET, GFX_WHOLE);
-	gfx_mono_draw_string("mundo", 50,16, &sysfont);
+	sprintf(str, "%04d", freq);
+	gfx_mono_draw_string(str, 0, 0, &sysfont);
 
   /* Insert application code here, after the board has been initialized. */
 	while(1) {
-		pisca_led(5, freq);
 		if (but_flag == 1){
-			delay_ms(300);
+			delay_ms(2000);
 			if (but_flag == 1){
 				freq += 100;
 			}
 			else{
 				freq -= 100;
 			}
-			sprintf(str, "%6.0lf", freq);
+			sprintf(str, "%04d", freq);
 			gfx_mono_draw_string(str, 0, 0, &sysfont);
 			but_flag = 0;
 		}
+		pisca_led(30, freq);
 	}
 }

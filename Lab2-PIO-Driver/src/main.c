@@ -130,16 +130,32 @@ void _pio_set_input(Pio *p_pio, const uint32_t ul_mask,
 const uint32_t ul_attribute){
 	if (ul_attribute & _PIO_PULLUP){
 		_pio_pull_up(*p_pio, ul_mask);
-	} 
-	if (ul_attribute & _PIO_DEFAULT){
-		_pio_pull_up(*p_pio, ul_mask);
 	}
 	if (ul_attribute & _PIO_DEBOUNCE){
 		p_pio->PIO_SCDR = ul_mask;
 	}
-	if (ul_attribute & _PIO_DEGLITCH){
-		p_pio->
+	if(ul_attribute & _PIO_DEGLITCH){
+		p_pio->PIO_IFSCDR = ul_mask;
 	}
+}
+
+void _pio_set_output(Pio *p_pio, const uint32_t ul_mask, const uint32_t ul_default_level, const uint32_t ul_multidrive_enable, const uint32_t ul_pull_up_enable)
+{
+	p_pio->PIO_PER = ul_mask;
+	p_pio->PIO_OER = ul_mask;
+	
+	if(ul_default_level){
+		_pio_set(p_pio,ul_mask);
+		} else{
+		_pio_clear(p_pio,ul_mask);
+	}
+	if(ul_pull_up_enable){
+		_pio_pull_up(p_pio, ul_mask, ul_pull_up_enable);
+	}
+	if(ul_multidrive_enable){
+		p_pio->PIO_MDER = ul_mask;
+	}
+	
 }
 
 // Função de inicialização do uC
